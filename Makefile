@@ -1,5 +1,5 @@
-brain-games:
-	poetry run brain-games
+start:
+	poetry run page-loader https://ru.hexlet.io/courses
 
 install:
 	poetry install
