@@ -1,5 +1,5 @@
 start:
-	poetry run page-loader https://ru.hexlet.io/courses
+	poetry run page-loader --output /home/ubuntu/dev/ https://www.sheldonbrown.com/web_sample1.html
 
 install:
 	poetry install
