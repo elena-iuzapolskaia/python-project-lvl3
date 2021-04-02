@@ -1,6 +1,13 @@
 start:
 	poetry run page-loader --output /home/ubuntu/dev/ https://www.sheldonbrown.com/web_sample1.html
 
+test:
+	poetry run pytest -vv
+
+test-coverage:
+	poetry run coverage run -m pytest -vv
+	poetry run coverage xml
+
 install:
 	poetry install
 
