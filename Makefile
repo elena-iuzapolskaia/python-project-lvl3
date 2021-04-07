@@ -1,5 +1,5 @@
 start:
-	poetry run page-loader --output /home/ubuntu/dev/ https://www.sheldonbrown.com/web_sample1.html
+	poetry run page-loader --output /home/ubuntu/dev/examples/page_loader http://www.dolekemp96.org/main.htm
 
 test:
 	poetry run pytest -vv

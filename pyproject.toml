@@ -12,6 +12,8 @@ python = "^3.8"
 pytest = "^6.2.2"
 requests = "^2.25.1"
 coverage = "^5.5"
+beautifulsoup4 = "^4.9.3"
+lxml = "^4.6.3"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.8.4"
