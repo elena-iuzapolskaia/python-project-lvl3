@@ -1,9 +1,10 @@
-from .name_creator import make_name, make_filename, make_img_name
 import argparse
+
+import requests
+from page_loader.scripts.name_creator import convert_to_str, make_filename, make_img_name
 from pathlib import Path
 from bs4 import BeautifulSoup as bs
 from urllib.parse import urljoin
-import requests
 
 
 def parse_cli_args():
@@ -17,18 +18,10 @@ def parse_cli_args():
     return (args.link, Path.cwd() / Path(args.output))
 
 
-def make_filepath_str(filepath):
-    ''' convert pathlib.Path to string'''
+def save_all_images(filepath, img_folder, link):
 
-    full_path = filepath.absolute()
-    return full_path.as_posix()
-
-
-def get_all_images(filepath, img_folder, link):
-    ''' download all images from saved page'''
-
-    with open(filepath) as f:
-        page = f.read()
+    with open(filepath) as fl:
+        page = fl.read()
     soup = bs(page, 'lxml')
 
     for img in soup.find_all('img'):
@@ -39,18 +32,17 @@ def get_all_images(filepath, img_folder, link):
         img_response = requests.get(img_url)
         img_name = make_img_name(img_url)
         img_path = img_folder / img_name
-        with open(img_path, "wb") as img_file:
+        with open(img_path, 'wb') as img_file:
             img_file.write(img_response.content)
-        img['src'] = f'{img_folder.stem}/{img_name}'
+        img['src'] = '{0}/{1}'.format(img_folder.stem, img_name)
 
-    with open(filepath, 'w') as f:
-        f.write(soup.prettify(formatter="html5"))
+    with open(filepath, 'w') as fs:
+        fs.write(soup.prettify(formatter='html5'))
 
 
 def download(link, folder_path):
-    ''' download page and page's content'''
-    foldername = f'{make_name(link)}_files'
-    print(foldername)
+    """Download page and page's content."""
+    foldername = '{0}_files'.format(convert_to_str(link))
     filename = Path(make_filename(link))
     file_path = folder_path / filename
     imgs_path = folder_path / foldername
@@ -61,9 +53,9 @@ def download(link, folder_path):
     with open(file_path, 'w') as f:
         f.write(page.text)
 
-    get_all_images(file_path, imgs_path, link)
+    save_all_images(file_path, imgs_path, link)
 
-    return make_filepath_str(file_path)
+    return file_path.absolute().as_posix()
 
 
 def main():
