@@ -1,4 +1,6 @@
 import re
+from urllib.parse import urlparse
+import os
 
 
 def convert_to_str(link):
@@ -14,14 +16,9 @@ def make_filename(link):
 
 
 def make_img_name(img_url):
-
-    slash_pos = img_url.rfind('/')
-    img_name = img_url[slash_pos + 1:]
-    dot_pos = img_name.rfind('.')
-    extention = '.png'
-    if dot_pos == -1:
-        dot_pos = len(img_name)
-    else:
-        extention = img_name[dot_pos:]
-    full_name = convert_to_str(img_url[:slash_pos + dot_pos + 1])
+    path = urlparse(img_url).path
+    extention = os.path.splitext(path)[1]
+    dot_pos = img_url.rfind('.')
+    
+    full_name = convert_to_str(img_url[:dot_pos])
     return '{0}{1}'.format(full_name, extention)

@@ -42,7 +42,7 @@ def save_all_images(filepath, img_folder, link):
 
 def download(link, folder_path):
     """Download page and page's content."""
-    foldername = '{0}_files'.format(convert_to_str(link))
+    foldername = Path('{0}_files'.format(convert_to_str(link)))
     filename = Path(make_filename(link))
     file_path = folder_path / filename
     imgs_path = folder_path / foldername

@@ -1,6 +1,9 @@
 start:
 	poetry run page-loader --output /home/ubuntu/dev/examples/page_loader http://www.dolekemp96.org/main.htm
 
+start_mac:
+	poetry run page-loader --output /Users/Elena/dev/examples/ http://www.dolekemp96.org/main.htm
+
 test:
 	poetry run pytest -vv
 
