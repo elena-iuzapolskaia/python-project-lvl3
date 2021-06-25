@@ -18,7 +18,10 @@ def make_filename(link):
 def make_img_name(img_url):
     path = urlparse(img_url).path
     extention = os.path.splitext(path)[1]
+    if not extention:
+        extention = '.html'
+        img_url = '{0}{1}'.format(img_url, extention)
     dot_pos = img_url.rfind('.')
-    
+
     full_name = convert_to_str(img_url[:dot_pos])
     return '{0}{1}'.format(full_name, extention)

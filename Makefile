@@ -19,6 +19,11 @@ update:
 	poetry build
 	pip3 install --user dist/*.whl
 
+update-mac:
+	pip3 uninstall hexlet-code
+	poetry build
+	pip3 install dist/*.whl
+
 build:
 	poetry build
 

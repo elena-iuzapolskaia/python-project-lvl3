@@ -4,7 +4,7 @@ import requests
 from page_loader.scripts.name_creator import convert_to_str, make_filename, make_img_name
 from pathlib import Path
 from bs4 import BeautifulSoup as bs
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 
 def parse_cli_args():
@@ -18,23 +18,27 @@ def parse_cli_args():
     return (args.link, Path.cwd() / Path(args.output))
 
 
-def save_all_images(filepath, img_folder, link):
+def save_all_content(filepath, img_folder, link):
 
     with open(filepath) as fl:
         page = fl.read()
     soup = bs(page, 'lxml')
-
-    for img in soup.find_all('img'):
-        img_url = img.get('src')
-        if not img_url or 'http' in img_url:
-            continue
-        img_url = urljoin(link, img_url)
-        img_response = requests.get(img_url)
-        img_name = make_img_name(img_url)
-        img_path = img_folder / img_name
-        with open(img_path, 'wb') as img_file:
-            img_file.write(img_response.content)
-        img['src'] = '{0}/{1}'.format(img_folder.stem, img_name)
+    content = soup.find_all(['img', 'script', 'link'])
+    for img in content:
+        if img.get('href'):
+            img_url = img.get('href')
+            attr_type = 'href'
+        else:
+            img_url = img.get('src')
+            attr_type = 'src'
+        if img_url and (not urlparse(img_url).hostname or urlparse(link).hostname == urlparse(img_url).hostname):
+            img_url = urljoin(link, img_url)
+            img_response = requests.get(img_url)
+            img_name = make_img_name(img_url)
+            img_path = img_folder / img_name
+            with open(img_path, 'wb') as img_file:
+                img_file.write(img_response.content)
+            img[attr_type] = '{0}/{1}'.format(img_folder.stem, img_name)
 
     with open(filepath, 'w') as fs:
         fs.write(soup.prettify(formatter='html5'))
@@ -53,7 +57,7 @@ def download(link, folder_path):
     with open(file_path, 'w') as f:
         f.write(page.text)
 
-    save_all_images(file_path, imgs_path, link)
+    save_all_content(file_path, imgs_path, link)
 
     return file_path.absolute().as_posix()
 
