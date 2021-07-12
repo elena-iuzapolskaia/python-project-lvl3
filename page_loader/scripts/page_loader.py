@@ -1,10 +1,19 @@
 import argparse
-
+import logging
 import requests
+import sys
+
+import page_loader.scripts.exceptions as exceptions
 from page_loader.scripts.name_creator import convert_to_str, make_filename, make_img_name
 from pathlib import Path
 from bs4 import BeautifulSoup as bs
 from urllib.parse import urljoin, urlparse
+from progress.spinner import PixelSpinner
+from logging import config
+
+
+config.fileConfig('logging.ini')
+logger = logging.getLogger()
 
 
 def parse_cli_args():
@@ -33,15 +42,34 @@ def save_all_content(filepath, img_folder, link):
             attr_type = 'src'
         if img_url and (not urlparse(img_url).hostname or urlparse(link).hostname == urlparse(img_url).hostname):
             img_url = urljoin(link, img_url)
-            img_response = requests.get(img_url)
+
+            try:
+                response = requests.get(img_url, stream=True)
+            except requests.exceptions.RequestException as e:
+                raise exceptions.LinkError('Problems with link or connection') from e
+
+            img_response = b''
+            spinner = PixelSpinner(f'Loading {img_url} ')
+            for data in response.iter_content(chunk_size=10):
+                spinner.next()
+                img_response += data
+            print()
+
             img_name = make_img_name(img_url)
             img_path = img_folder / img_name
             with open(img_path, 'wb') as img_file:
-                img_file.write(img_response.content)
+                try:
+                    img_file.write(img_response)
+                except OSError as e:
+                    raise exceptions.BadInputError("Can't download content to file") from e
+
             img[attr_type] = '{0}/{1}'.format(img_folder.stem, img_name)
 
     with open(filepath, 'w') as fs:
-        fs.write(soup.prettify(formatter='html5'))
+        try:
+            fs.write(soup.prettify(formatter='html5'))
+        except OSError as e:
+            raise exceptions.BadInputError("Can't save page to file") from e
 
 
 def download(link, folder_path):
@@ -51,11 +79,21 @@ def download(link, folder_path):
     file_path = folder_path / filename
     imgs_path = folder_path / foldername
     if not imgs_path.is_dir():
-        imgs_path.mkdir()
+        try:
+            imgs_path.mkdir()
+        except OSError as e:
+            raise exceptions.BadInputError("Can't download to this directory") from e
 
-    page = requests.get(link)
+    try:
+        page = requests.get(link)
+    except requests.exceptions.RequestException as e:
+        raise exceptions.LinkError('Problems with link or connection') from e
+
     with open(file_path, 'w') as f:
-        f.write(page.text)
+        try:
+            f.write(page.text)
+        except OSError as e:
+            raise exceptions.BadInputError("Can't save page to file") from e
 
     save_all_content(file_path, imgs_path, link)
 
@@ -64,7 +102,12 @@ def download(link, folder_path):
 
 def main():
     link, file_path = parse_cli_args()
-    print(download(link, file_path))
+    try:
+        print(download(link, file_path))
+    except exceptions.AppInternalError as e:
+        logger.exception(e)
+        print(e.args[0])
+        sys.exit(1)
 
 
 if __name__ == '__init__':

@@ -1,13 +1,19 @@
 import re
 from urllib.parse import urlparse
 import os
+import logging
+
+from page_loader.scripts import exceptions
+
+logger = logging.getLogger(__name__)
 
 
 def convert_to_str(link):
     """Change link to string without scheme and special symbols."""
     slashes_pos = link.find('//')
+    if slashes_pos == -1:
+        raise exceptions.BadInputError('Link without http(s)://')
     no_scheme_link = link[slashes_pos + 2:]
-
     return re.sub('[^0-9a-zA-Z]', '-', no_scheme_link)
 
 

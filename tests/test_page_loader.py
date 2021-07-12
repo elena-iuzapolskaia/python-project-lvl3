@@ -23,7 +23,7 @@ with open('tests/fixtures/test_page/packs/js/runtime.js', 'rb') as f:
 
 def test_page_downloader():
     testfile_path = Path.cwd() / 'tests' / 'fixtures' / 'test_page_content' / 'ru-hexlet-io-courses.html'
-    # testdir_path = Path.cwd() / 'tests' / 'fixtures' / 'test_page1'
+    testdir_path = Path.cwd() / 'tests' / 'fixtures' / 'test_page_content' / 'ru-hexlet-io-courses_files'
     # common_files = ['www-test1-com-bathing-suit.webp']
 
     with requests_mock.Mocker() as m:
@@ -34,6 +34,9 @@ def test_page_downloader():
         with tempfile.TemporaryDirectory() as tmpdir:
 
             downloaded_path = PosixPath(download(page_link, tmpdir))
-            assert filecmp.cmp(testfile_path, downloaded_path)
-            # assert filecmp.cmpfiles(testdir_path/'www-test1-com_files',
-            #                         downloaded_path.parent/'www-test1-com_files', common_files)
+            assert filecmp.cmp(testfile_path, downloaded_path, shallow=False)
+            dc = filecmp.dircmp(testdir_path,
+                                downloaded_path.parent / 'ru-hexlet-io-courses_files')
+            assert len(dc.left_only + dc.right_only) == 0
+
+            # shutil сравнить напрямую файлы циклом или написать хелпер над файлцмп
