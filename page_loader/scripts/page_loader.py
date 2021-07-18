@@ -55,7 +55,10 @@ def parse_cli_args():
     parser = argparse.ArgumentParser(description='Download page')
     parser.add_argument('-O', '--output', help='set output path')
     parser.add_argument('link')
-    args = parser.parse_args()
+    try:
+        args = parser.parse_args()
+    except SystemExit:
+        sys.exit(0)
 
     if not args.output:
         args.output = ''
