@@ -145,6 +145,8 @@ def main():
         logger.exception(e)
         print(e.args[0])
         sys.exit(1)
+    finally:
+        sys.exit(0)
 
 
 if __name__ == '__init__':
