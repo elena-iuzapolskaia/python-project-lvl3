@@ -9,7 +9,7 @@ test:
 
 test-coverage:
 	poetry run coverage run -m pytest -vv
-	poetry run coverage xml
+	poetry run coverage xml --omit */.venv/*
 
 install:
 	poetry install
