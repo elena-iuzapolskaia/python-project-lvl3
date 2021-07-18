@@ -113,16 +113,16 @@ def download(link, folder_path):
     filename = Path(make_filename(link))
     file_path = folder_path / filename
     imgs_path = folder_path / foldername
-    if not imgs_path.is_dir():
-        try:
-            imgs_path.mkdir()
-        except OSError as e:
-            raise exceptions.BadInputError("Can't download to this directory") from e
 
     try:
         page = requests.get(link)
     except requests.exceptions.RequestException as e:
         raise exceptions.LinkError('Problems with link or connection') from e
+    if not imgs_path.is_dir():
+        try:
+            imgs_path.mkdir()
+        except OSError as e:
+            raise exceptions.BadInputError("Can't download to this directory") from e
 
     with open(file_path, 'w') as f:
         try:
