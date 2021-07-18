@@ -118,6 +118,11 @@ def download(link, folder_path):
         page = requests.get(link)
     except requests.exceptions.RequestException as e:
         raise exceptions.LinkError('Problems with link or connection') from e
+
+    if page.raise_for_status():
+        logger.error('bad request status code')
+        raise exceptions.LinkError('bad request status code')
+
     if not imgs_path.is_dir():
         try:
             imgs_path.mkdir()
