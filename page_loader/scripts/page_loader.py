@@ -53,7 +53,7 @@ logger = logging.getLogger()
 
 def parse_cli_args():
     parser = argparse.ArgumentParser(description='Download page')
-    parser.add_argument('-O', '--output', help='set output path')
+    parser.add_argument('-O', '-o', '--output', help='set output path')
     parser.add_argument('link')
     try:
         args = parser.parse_args()
