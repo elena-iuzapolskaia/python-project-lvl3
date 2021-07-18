@@ -66,7 +66,7 @@ def save_all_content(filepath, img_folder, link):
 
     with open(filepath) as fl:
         page = fl.read()
-    soup = bs(page, 'lxml')
+    soup = bs(page, 'html.parser')
     content = soup.find_all(['img', 'script', 'link'])
     for img in content:
         if img.get('href'):
@@ -116,12 +116,9 @@ def download(link, folder_path):
 
     try:
         page = requests.get(link)
+        page.raise_for_status()
     except requests.exceptions.RequestException as e:
         raise exceptions.LinkError('Problems with link or connection') from e
-
-    if page.raise_for_status():
-        logger.error('bad request status code')
-        raise exceptions.LinkError('bad request status code')
 
     if not imgs_path.is_dir():
         try:
