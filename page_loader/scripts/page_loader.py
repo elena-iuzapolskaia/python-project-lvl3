@@ -12,8 +12,10 @@ from progress.spinner import PixelSpinner
 from logging import config
 
 
-config.fileConfig('logging.ini')
-logger = logging.getLogger()
+try:
+    config.fileConfig('logging.ini')
+finally:
+    logger = logging.getLogger()
 
 
 def parse_cli_args():
