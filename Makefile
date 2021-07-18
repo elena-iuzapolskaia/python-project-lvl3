@@ -11,6 +11,10 @@ test-coverage:
 	poetry run coverage run -m pytest -vv
 	poetry run coverage xml --omit */.venv/*
 
+test-coverage-actions:
+	poetry run coverage run -m pytest -vv
+	poetry run coverage xml --omit */virtualenvs/*
+
 install:
 	poetry install
 

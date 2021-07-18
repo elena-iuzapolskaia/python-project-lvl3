@@ -24,6 +24,6 @@ jobs:
         env:
           CC_TEST_REPORTER_ID: ae4d7ab6b93a4cf339b7da80916c7ce2185992ecdc3833c040b183137fea9b7f
         with:
-          coverageCommand: make test-coverage
+          coverageCommand: make test-coverage-actions
           debug: true
           prefix: /page-loader
