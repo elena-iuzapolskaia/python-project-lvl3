@@ -12,10 +12,43 @@ from progress.spinner import PixelSpinner
 from logging import config
 
 
-try:
-    config.fileConfig('logging.ini')
-finally:
-    logger = logging.getLogger()
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'formatter': {
+            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        },
+    },
+    'handlers': {
+        's_handler': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'formatter'
+        },
+        'f_handler': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'formatter': 'formatter',
+            'filename': 'debug.log',
+            'mode': 'a',
+        },
+    },
+    'loggers': {
+        'root': {
+            'handlers': ['f_handler'],
+            'level': 'INFO',
+        },
+        'name_creator': {
+            'handlers': ['s_handler'],
+            'level': 'INFO',
+            'propagate': False,
+        }
+    }
+}
+
+config.dictConfig(LOGGING)
+logger = logging.getLogger()
 
 
 def parse_cli_args():
