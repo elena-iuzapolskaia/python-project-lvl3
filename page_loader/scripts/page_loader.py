@@ -4,7 +4,7 @@ import requests
 import sys
 
 import page_loader.scripts.exceptions as exceptions
-from page_loader.scripts.name_creator import convert_to_str, make_filename, make_img_name
+from page_loader.scripts.name_creator import convert_to_str, make_filename, make_content_name
 from pathlib import Path
 from bs4 import BeautifulSoup as bs
 from urllib.parse import urljoin, urlparse
@@ -65,43 +65,65 @@ def parse_cli_args():
     return (args.link, Path.cwd() / Path(args.output))
 
 
-def save_all_content(filepath, img_folder, link):
+def download_content(response, attr_value):
+    content = b''
+    spinner = PixelSpinner(f'Loading {attr_value} ')
+    for data in response.iter_content(chunk_size=10):
+        spinner.next()
+        content += data
+    print()
+    return content
 
-    with open(filepath) as fl:
-        page = fl.read()
+
+def get_attr_with_value(tag):
+    if tag.get('href'):
+        attr_value = tag.get('href')
+        attr = 'href'
+    else:
+        attr_value = tag.get('src')
+        attr = 'src'
+    if attr_value:
+        return attr, attr_value
+    return None
+
+
+def save_all_content(filepath, content_folder, link):
+
+    try:
+        with open(filepath) as fl:
+            page = fl.read()
+    except OSError as e:
+        raise exceptions.BadInputError("Can't open downloaded page") from e
+
     soup = bs(page, 'html.parser')
     content = soup.find_all(['img', 'script', 'link'])
-    for img in content:
-        if img.get('href'):
-            img_url = img.get('href')
-            attr_type = 'href'
-        else:
-            img_url = img.get('src')
-            attr_type = 'src'
-        if img_url and (not urlparse(img_url).hostname or urlparse(link).hostname == urlparse(img_url).hostname):
-            img_url = urljoin(link, img_url)
+    for tag in content:
+        tag_content = get_attr_with_value(tag)
+        if not tag_content:
+            continue
+        attr, attr_value = tag_content
 
+        if urlparse(attr_value).hostname:
+            if urlparse(link).hostname != urlparse(attr_value).hostname:
+                continue
+        attr_value = urljoin(link, attr_value)
+
+        try:
+            response = requests.get(attr_value, stream=True)
+        except requests.exceptions.RequestException as e:
+            raise exceptions.LinkError('Problems with link or connection') from e
+
+        content = download_content(response, attr_value)
+
+        content_name = make_content_name(attr_value)
+        content_path = content_folder / content_name
+        with open(content_path, 'wb') as content_file:
             try:
-                response = requests.get(img_url, stream=True)
-            except requests.exceptions.RequestException as e:
-                raise exceptions.LinkError('Problems with link or connection') from e
+                content_file.write(content)
+            except OSError as e:
+                raise exceptions.BadInputError("Can't download content to file") from e
 
-            img_response = b''
-            spinner = PixelSpinner(f'Loading {img_url} ')
-            for data in response.iter_content(chunk_size=10):
-                spinner.next()
-                img_response += data
-            print()
-
-            img_name = make_img_name(img_url)
-            img_path = img_folder / img_name
-            with open(img_path, 'wb') as img_file:
-                try:
-                    img_file.write(img_response)
-                except OSError as e:
-                    raise exceptions.BadInputError("Can't download content to file") from e
-
-            img[attr_type] = '{0}/{1}'.format(img_folder.stem, img_name)
+        tag[attr] = '{0}/{1}'.format(content_folder.stem, content_name)
 
     with open(filepath, 'w') as fs:
         try:
@@ -112,10 +134,10 @@ def save_all_content(filepath, img_folder, link):
 
 def download(link, folder_path):
     """Download page and page's content."""
-    foldername = Path('{0}_files'.format(convert_to_str(link)))
-    filename = Path(make_filename(link))
-    file_path = folder_path / filename
-    imgs_path = folder_path / foldername
+    page_folder = Path('{0}_files'.format(convert_to_str(link)))
+    page_name = Path(make_filename(link))
+    page_path = folder_path / page_name
+    content_folder = folder_path / page_folder
 
     try:
         page = requests.get(link)
@@ -123,21 +145,21 @@ def download(link, folder_path):
     except requests.exceptions.RequestException as e:
         raise exceptions.LinkError('Problems with link or connection') from e
 
-    if not imgs_path.is_dir():
+    if not content_folder.is_dir():
         try:
-            imgs_path.mkdir()
+            content_folder.mkdir()
         except OSError as e:
             raise exceptions.BadInputError("Can't download to this directory") from e
 
-    with open(file_path, 'w') as f:
+    with open(page_path, 'w') as f:
         try:
             f.write(page.text)
         except OSError as e:
             raise exceptions.BadInputError("Can't save page to file") from e
 
-    save_all_content(file_path, imgs_path, link)
+    save_all_content(page_path, content_folder, link)
 
-    return file_path.absolute().as_posix()
+    return page_path.absolute().as_posix()
 
 
 def main():

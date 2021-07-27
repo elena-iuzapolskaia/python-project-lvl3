@@ -21,7 +21,7 @@ def make_filename(link):
     return '{0}.html'.format(convert_to_str(link))
 
 
-def make_img_name(img_url):
+def make_content_name(img_url):
     path = urlparse(img_url).path
     extention = os.path.splitext(path)[1]
     if not extention:
